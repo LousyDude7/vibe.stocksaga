@@ -1,0 +1,1221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stock Saga - Multiplayer Stock Market Game</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .news-ticker {
+            animation: ticker 30s linear infinite;
+            white-space: nowrap;
+        }
+        @keyframes ticker {
+            0% { transform: translateX(100%); }
+            100% { transform: translateX(-100%); }
+        }
+        .stock-up {
+            color: #10b981;
+        }
+        .stock-down {
+            color: #ef4444;
+        }
+        .chart-container {
+            height: 200px;
+        }
+        .blink {
+            animation: blink 1s step-start infinite;
+        }
+        @keyframes blink {
+            50% { opacity: 0; }
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-white min-h-screen">
+    <!-- Main Container -->
+    <div id="app" class="container mx-auto px-4 py-8">
+        <!-- Landing Page -->
+        <div id="landing-page" class="text-center">
+            <div class="mb-12">
+                <h1 class="text-5xl font-bold mb-4 text-blue-400">STOCK SAGA</h1>
+                <p class="text-xl text-gray-300 mb-8">A multiplayer stock market simulator where you test your trading skills.</p>
+                <div class="flex justify-center space-x-6">
+                    <button onclick="showPage('login-page')" class="bg-blue-600 hover:bg-blue-700 px-6 py-3 rounded-lg font-semibold text-lg transition duration-300 transform hover:scale-105">
+                        <i class="fas fa-sign-in-alt mr-2"></i>Login
+                    </button>
+                    <button onclick="showPage('rules-page')" class="bg-gray-700 hover:bg-gray-600 px-6 py-3 rounded-lg font-semibold text-lg transition duration-300 transform hover:scale-105">
+                        <i class="fas fa-book mr-2"></i>View Rules
+                    </button>
+                </div>
+            </div>
+            <div class="max-w-4xl mx-auto bg-gray-800 p-6 rounded-xl shadow-xl">
+                <h2 class="text-2xl font-bold mb-4 text-blue-400">How to Play</h2>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="bg-gray-700 p-4 rounded-lg">
+                        <div class="text-blue-400 text-3xl mb-3"><i class="fas fa-wallet"></i></div>
+                        <h3 class="font-bold mb-2">Start with $100,000</h3>
+                        <p class="text-gray-300">Each team begins with a virtual balance to invest in stocks.</p>
+                    </div>
+                    <div class="bg-gray-700 p-4 rounded-lg">
+                        <div class="text-blue-400 text-3xl mb-3"><i class="fas fa-chart-line"></i></div>
+                        <h3 class="font-bold mb-2">Trade Stocks</h3>
+                        <p class="text-gray-300">Buy low, sell high based on market trends and news events.</p>
+                    </div>
+                    <div class="bg-gray-700 p-4 rounded-lg">
+                        <div class="text-blue-400 text-3xl mb-3"><i class="fas fa-trophy"></i></div>
+                        <h3 class="font-bold mb-2">Win Big</h3>
+                        <p class="text-gray-300">Grow your portfolio to top the leaderboard!</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Rules Page -->
+        <div id="rules-page" class="hidden max-w-4xl mx-auto">
+            <div class="flex items-center mb-8">
+                <button onclick="showPage('landing-page')" class="mr-4 text-blue-400 hover:text-blue-300">
+                    <i class="fas fa-arrow-left text-2xl"></i>
+                </button>
+                <h2 class="text-3xl font-bold">Game Rules</h2>
+            </div>
+            <div class="bg-gray-800 p-6 rounded-xl shadow-xl">
+                <div class="space-y-4">
+                    <div class="border-b border-gray-700 pb-4">
+                        <h3 class="text-xl font-semibold text-blue-400">Objective</h3>
+                        <p>Grow your virtual investment portfolio by making smart stock trades in response to market fluctuations and news events.</p>
+                    </div>
+                    <div class="border-b border-gray-700 pb-4">
+                        <h3 class="text-xl font-semibold text-blue-400">Starting Balance</h3>
+                        <p>Each team begins with $100,000 in virtual currency to invest.</p>
+                    </div>
+                    <div class="border-b border-gray-700 pb-4">
+                        <h3 class="text-xl font-semibold text-blue-400">Stock Trading</h3>
+                        <ul class="list-disc pl-5 space-y-2">
+                            <li>You can buy and sell stocks at current market prices</li>
+                            <li>Stock prices update every 5 seconds with random fluctuations</li>
+                            <li>News events will significantly impact certain stock prices</li>
+                            <li>No transaction fees or taxes are applied</li>
+                        </ul>
+                    </div>
+                    <div class="border-b border-gray-700 pb-4">
+                        <h3 class="text-xl font-semibold text-blue-400">News Events</h3>
+                        <p>The admin will periodically release news events that affect specific stocks. Pay attention to the news ticker for these announcements.</p>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-semibold text-blue-400">Winning</h3>
+                        <p>The team with the highest portfolio value (cash + stock value) at the end of the game session wins.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Login Page -->
+        <div id="login-page" class="hidden max-w-md mx-auto">
+            <div class="flex items-center mb-8">
+                <button onclick="showPage('landing-page')" class="mr-4 text-blue-400 hover:text-blue-300">
+                    <i class="fas fa-arrow-left text-2xl"></i>
+                </button>
+                <h2 class="text-3xl font-bold">Team Login</h2>
+            </div>
+            <div class="bg-gray-800 p-8 rounded-xl shadow-xl">
+                <form id="team-login-form" class="space-y-6">
+                    <div>
+                        <label for="team-id" class="block text-sm font-medium mb-1">Team ID</label>
+                        <input type="text" id="team-id" required class="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label for="team-password" class="block text-sm font-medium mb-1">Password</label>
+                        <input type="password" id="team-password" required class="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                    <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 py-2 px-4 rounded-lg font-semibold transition duration-300">
+                        <i class="fas fa-sign-in-alt mr-2"></i>Login
+                    </button>
+                </form>
+                <div class="mt-6 text-center">
+                    <button onclick="showAdminLogin()" class="text-blue-400 hover:text-blue-300 text-sm">
+                        <i class="fas fa-user-shield mr-1"></i>Admin Login
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Admin Login Page -->
+        <div id="admin-login-page" class="hidden max-w-md mx-auto">
+            <div class="flex items-center mb-8">
+                <button onclick="showPage('login-page')" class="mr-4 text-blue-400 hover:text-blue-300">
+                    <i class="fas fa-arrow-left text-2xl"></i>
+                </button>
+                <h2 class="text-3xl font-bold">Admin Login</h2>
+            </div>
+            <div class="bg-gray-800 p-8 rounded-xl shadow-xl">
+                <form id="admin-login-form" class="space-y-6">
+                    <div>
+                        <label for="admin-id" class="block text-sm font-medium mb-1">Admin ID</label>
+                        <input type="text" id="admin-id" required class="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label for="admin-password" class="block text-sm font-medium mb-1">Password</label>
+                        <input type="password" id="admin-password" required class="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                    <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 py-2 px-4 rounded-lg font-semibold transition duration-300">
+                        <i class="fas fa-sign-in-alt mr-2"></i>Login
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Team Dashboard -->
+        <div id="dashboard-page" class="hidden">
+            <!-- News Ticker -->
+            <div class="bg-gray-800 p-3 mb-6 rounded-lg overflow-hidden">
+                <div class="flex items-center">
+                    <span class="bg-red-500 text-white px-2 py-1 rounded text-xs font-bold mr-3 blink">LIVE</span>
+                    <div class="news-ticker">
+                        <span id="news-content" class="text-sm">Market opens with strong gains across tech sector. Neurobyte Systems up 3.2%. New economic data to be released at 2PM.</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dashboard Header -->
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
+                <div>
+                    <h2 class="text-3xl font-bold">Team Dashboard</h2>
+                    <p class="text-gray-400">Welcome, <span id="team-name" class="text-blue-400">Team 1</span></p>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <div class="mt-4 md:mt-0 bg-gray-800 px-6 py-3 rounded-lg shadow">
+                        <div class="flex items-center">
+                            <i class="fas fa-wallet text-blue-400 mr-2"></i>
+                            <span class="font-medium">Balance:</span>
+                            <span id="team-balance" class="ml-2 font-bold text-xl">$100,000.00</span>
+                        </div>
+                    </div>
+                    <button onclick="logout()" class="bg-red-600 hover:bg-red-700 px-4 py-3 rounded-lg font-semibold transition duration-300">
+                        <i class="fas fa-sign-out-alt mr-2"></i>Logout
+                    </button>
+                </div>
+            </div>
+
+            <!-- Main Dashboard Content -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Left Column: Stocks Table -->
+                <div class="lg:col-span-2">
+                    <div class="bg-gray-800 p-4 rounded-xl shadow">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="text-xl font-semibold">Available Stocks</h3>
+                            <div class="flex items-center">
+                                <span class="text-xs mr-2">Last updated:</span>
+                                <span id="last-updated" class="text-blue-400 text-sm">Just now</span>
+                            </div>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full">
+                                <thead>
+                                    <tr class="border-b border-gray-700 text-left">
+                                        <th class="pb-2">Stock</th>
+                                        <th class="pb-2">Price</th>
+                                        <th class="pb-2">Change</th>
+                                        <th class="pb-2">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="stocks-table">
+                                    <!-- Stocks will be populated here by JavaScript -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Portfolio Section -->
+                    <div class="bg-gray-800 p-4 rounded-xl shadow mt-6">
+                        <h3 class="text-xl font-semibold mb-4">Your Portfolio</h3>
+                        <div id="portfolio-empty" class="text-center py-8 text-gray-500">
+                            <i class="fas fa-box-open text-4xl mb-3"></i>
+                            <p>Your portfolio is empty. Start trading!</p>
+                        </div>
+                        <div id="portfolio-content" class="hidden">
+                            <div class="overflow-x-auto">
+                                <table class="w-full">
+                                    <thead>
+                                        <tr class="border-b border-gray-700 text-left">
+                                            <th class="pb-2">Stock</th>
+                                            <th class="pb-2">Shares</th>
+                                            <th class="pb-2">Avg Price</th>
+                                            <th class="pb-2">Current Value</th>
+                                            <th class="pb-2">P/L</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="portfolio-table">
+                                        <!-- Portfolio items will be populated here by JavaScript -->
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="mt-4 pt-4 border-t border-gray-700 flex justify-between items-center">
+                                <span class="font-medium">Total Portfolio Value:</span>
+                                <span id="portfolio-total" class="font-bold text-lg">$0.00</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Column: Trade Form -->
+                <div>
+                    <div class="bg-gray-800 p-4 rounded-xl shadow sticky top-4">
+                        <h3 class="text-xl font-semibold mb-4">Trade Stocks</h3>
+                        <form id="trade-form" class="space-y-4">
+                            <div>
+                                <label for="trade-stock" class="block text-sm font-medium mb-1">Stock</label>
+                                <select id="trade-stock" class="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+                                    <!-- Options will be populated by JavaScript -->
+                                </select>
+                            </div>
+                            <div>
+                                <label for="trade-quantity" class="block text-sm font-medium mb-1">Quantity</label>
+                                <input type="number" id="trade-quantity" min="1" value="1" class="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+                            </div>
+                            <div class="grid grid-cols-2 gap-3">
+                                <button type="button" id="buy-btn" class="bg-green-600 hover:bg-green-700 py-2 px-4 rounded-lg font-semibold transition duration-300">
+                                    <i class="fas fa-arrow-up mr-2"></i>Buy
+                                </button>
+                                <button type="button" id="sell-btn" class="bg-red-600 hover:bg-red-700 py-2 px-4 rounded-lg font-semibold transition duration-300">
+                                    <i class="fas fa-arrow-down mr-2"></i>Sell
+                                </button>
+                            </div>
+                            <div id="trade-message" class="hidden p-3 rounded-lg text-sm"></div>
+                        </form>
+
+                        <!-- Stock Chart -->
+                        <div class="mt-6">
+                            <h4 class="font-medium mb-2">Stock Performance</h4>
+                            <div class="bg-gray-700 p-3 rounded-lg chart-container">
+                                <canvas id="stock-chart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Leaderboard -->
+            <div class="bg-gray-800 p-4 rounded-xl shadow mt-6">
+                <h3 class="text-xl font-semibold mb-4">Leaderboard</h3>
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead>
+                            <tr class="border-b border-gray-700 text-left">
+                                <th class="pb-2">Rank</th>
+                                <th class="pb-2">Team</th>
+                                <th class="pb-2">Portfolio Value</th>
+                                <th class="pb-2">Today's Change</th>
+                            </tr>
+                        </thead>
+                        <tbody id="leaderboard-table">
+                            <!-- Leaderboard will be populated here by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Admin Panel -->
+        <div id="admin-page" class="hidden">
+            <div class="flex justify-between items-center mb-8">
+                <div class="flex items-center">
+                    <button onclick="showPage('login-page')" class="mr-4 text-blue-400 hover:text-blue-300">
+                        <i class="fas fa-arrow-left text-2xl"></i>
+                    </button>
+                    <h2 class="text-3xl font-bold">Admin Panel</h2>
+                </div>
+                <button id="reset-game-btn" class="bg-red-600 hover:bg-red-700 px-4 py-2 rounded-lg font-semibold">
+                    <i class="fas fa-redo mr-2"></i>Reset Game
+                </button>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- News Management -->
+                <div class="bg-gray-800 p-4 rounded-xl shadow">
+                    <h3 class="text-xl font-semibold mb-4">News Management</h3>
+                    <form id="news-form" class="space-y-4">
+                        <div>
+                            <label for="news-headline" class="block text-sm font-medium mb-1">Headline</label>
+                            <input type="text" id="news-headline" required class="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                        <div>
+                            <label for="news-stock" class="block text-sm font-medium mb-1">Affected Stock</label>
+                            <select id="news-stock" class="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+                                <!-- Options will be populated by JavaScript -->
+                            </select>
+                        </div>
+                        <div>
+                            <label for="news-impact" class="block text-sm font-medium mb-1">Impact (%)</label>
+                            <input type="number" id="news-impact" min="-50" max="50" step="0.1" class="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                        <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 py-2 px-4 rounded-lg font-semibold transition duration-300">
+                            <i class="fas fa-plus mr-2"></i>Add News Event
+                        </button>
+                    </form>
+
+                    <div class="mt-6">
+                        <h4 class="font-medium mb-2">Pending News Events</h4>
+                        <div id="pending-news" class="space-y-2">
+                            <!-- Pending news will be populated here by JavaScript -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Game Control -->
+                <div class="bg-gray-800 p-4 rounded-xl shadow">
+                    <h3 class="text-xl font-semibold mb-4">Game Control</h4>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Stock Price Update</label>
+                            <div class="flex items-center space-x-4">
+                                <button id="start-updates" class="bg-green-600 hover:bg-green-700 px-4 py-2 rounded-lg font-semibold">
+                                    <i class="fas fa-play mr-2"></i>Start
+                                </button>
+                                <button id="stop-updates" class="bg-red-600 hover:bg-red-700 px-4 py-2 rounded-lg font-semibold">
+                                    <i class="fas fa-stop mr-2"></i>Stop
+                                </button>
+                                <span id="update-status" class="text-sm text-blue-400">Running</span>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Game Timer</label>
+                            <div class="flex items-center space-x-4">
+                                <div class="text-2xl font-mono" id="game-timer">60:00</div>
+                                <button id="start-timer" class="bg-green-600 hover:bg-green-700 px-4 py-2 rounded-lg font-semibold">
+                                    <i class="fas fa-play mr-2"></i>Start
+                                </button>
+                                <button id="pause-timer" class="bg-yellow-600 hover:bg-yellow-700 px-4 py-2 rounded-lg font-semibold">
+                                    <i class="fas fa-pause mr-2"></i>Pause
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Teams Overview -->
+                    <div class="mt-6">
+                        <h4 class="font-medium mb-2">Teams Overview</h4>
+                        <div class="overflow-x-auto">
+                            <table class="w-full">
+                                <thead>
+                                    <tr class="border-b border-gray-700 text-left">
+                                        <th class="pb-2">Team</th>
+                                        <th class="pb-2">Balance</th>
+                                        <th class="pb-2">Portfolio Value</th>
+                                        <th class="pb-2">Total</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="admin-teams-table">
+                                    <!-- Teams data will be populated here by JavaScript -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Current Stock Prices -->
+            <div class="bg-gray-800 p-4 rounded-xl shadow mt-6">
+                <h3 class="text-xl font-semibold mb-4">Stock Prices</h3>
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead>
+                            <tr class="border-b border-gray-700 text-left">
+                                <th class="pb-2">Stock</th>
+                                <th class="pb-2">Current Price</th>
+                                <th class="pb-2">Change</th>
+                                <th class="pb-2">Market Cap</th>
+                                <th class="pb-2">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="admin-stocks-table">
+                            <!-- Stocks data will be populated here by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // Game State
+        const gameState = {
+            teams: [
+                { id: 'team1', name: 'Team 1', password: 'stock123', balance: 100000, portfolio: {} },
+                { id: 'team2', name: 'Team 2', password: 'stock123', balance: 100000, portfolio: {} },
+                { id: 'team3', name: 'Team 3', password: 'stock123', balance: 100000, portfolio: {} }
+            ],
+            admin: { id: 'admin', password: '1234' },
+            stocks: [
+                { symbol: 'NBS', name: 'Neurobyte Systems', price: 9250, history: [], category: 'Tech' },
+                { symbol: 'CLT', name: 'Cloudora Tech', price: 7600, history: [], category: 'Tech' },
+                { symbol: 'IFX', name: 'Infinitix Solutions', price: 6850, history: [], category: 'Tech' },
+                { symbol: 'DON', name: 'DriveOn Motors', price: 8400, history: [], category: 'Auto' },
+                { symbol: 'AUL', name: 'Autowheel Ltd.', price: 5300, history: [], category: 'Auto' },
+                { symbol: 'SFA', name: 'SkyFly Airlines', price: 3200, history: [], category: 'Travel' },
+                { symbol: 'SRX', name: 'Solarix Renewables', price: 6450, history: [], category: 'Energy' },
+                { symbol: 'WDP', name: 'Windora Power', price: 5800, history: [], category: 'Energy' },
+                { symbol: 'PCE', name: 'PetroCore Energy', price: 4950, history: [], category: 'Energy' },
+                { symbol: 'TBC', name: 'TrustBank Corp.', price: 6200, history: [], category: 'Finance' },
+                { symbol: 'SSI', name: 'SafeShield Insurance', price: 4700, history: [], category: 'Finance' },
+                { symbol: 'FVC', name: 'FinVest Capital', price: 7050, history: [], category: 'Finance' },
+                { symbol: 'FBF', name: 'FreshBite Foods', price: 3400, history: [], category: 'Consumer' },
+                { symbol: 'QSB', name: 'QuickSip Beverages', price: 2950, history: [], category: 'Consumer' },
+                { symbol: 'DEE', name: 'DailyEase Essentials', price: 3150, history: [], category: 'Consumer' },
+                { symbol: 'MCL', name: 'MediCure Labs', price: 4200, history: [], category: 'Healthcare' },
+                { symbol: 'BHP', name: 'BioHeal Pharma', price: 7800, history: [], category: 'Healthcare' },
+                { symbol: 'HSR', name: 'HealthSure Remedies', price: 3600, history: [], category: 'Healthcare' },
+                { symbol: 'AGL', name: 'AuricGold Ltd.', price: 9100, history: [], category: 'Commodities' },
+                { symbol: 'MMX', name: 'Minerix Metals', price: 8650, history: [], category: 'Commodities' },
+                { symbol: 'SLR', name: 'Silverline Resources', price: 6900, history: [], category: 'Commodities' },
+                { symbol: 'EWG', name: 'EliteWear Global', price: 8100, history: [], category: 'Retail' },
+                { symbol: 'LXJ', name: 'Luxora Jewels', price: 9700, history: [], category: 'Retail' },
+                { symbol: 'PRM', name: 'Prestigio Motors', price: 9850, history: [], category: 'Auto' }
+            ],
+            newsEvents: [],
+            pendingNews: [],
+            activeNews: [],
+            priceUpdateInterval: null,
+            gameTimerInterval: null,
+            gameTimeLeft: 3600, // 60 minutes in seconds
+            currentUser: null,
+            stockChart: null,
+            selectedStock: null
+        };
+
+        // Initialize stock history
+        gameState.stocks.forEach(stock => {
+            for (let i = 0; i < 20; i++) {
+                stock.history.push(stock.price);
+            }
+        });
+
+        // DOM Elements
+        const elements = {
+            landingPage: document.getElementById('landing-page'),
+            rulesPage: document.getElementById('rules-page'),
+            loginPage: document.getElementById('login-page'),
+            adminLoginPage: document.getElementById('admin-login-page'),
+            dashboardPage: document.getElementById('dashboard-page'),
+            adminPage: document.getElementById('admin-page'),
+            teamLoginForm: document.getElementById('team-login-form'),
+            adminLoginForm: document.getElementById('admin-login-form'),
+            teamName: document.getElementById('team-name'),
+            teamBalance: document.getElementById('team-balance'),
+            stocksTable: document.getElementById('stocks-table'),
+            portfolioTable: document.getElementById('portfolio-table'),
+            portfolioContent: document.getElementById('portfolio-content'),
+            portfolioEmpty: document.getElementById('portfolio-empty'),
+            portfolioTotal: document.getElementById('portfolio-total'),
+            tradeStock: document.getElementById('trade-stock'),
+            tradeQuantity: document.getElementById('trade-quantity'),
+            buyBtn: document.getElementById('buy-btn'),
+            sellBtn: document.getElementById('sell-btn'),
+            tradeMessage: document.getElementById('trade-message'),
+            leaderboardTable: document.getElementById('leaderboard-table'),
+            newsContent: document.getElementById('news-content'),
+            lastUpdated: document.getElementById('last-updated'),
+            stockChart: document.getElementById('stock-chart'),
+            newsForm: document.getElementById('news-form'),
+            newsHeadline: document.getElementById('news-headline'),
+            newsStock: document.getElementById('news-stock'),
+            newsImpact: document.getElementById('news-impact'),
+            pendingNews: document.getElementById('pending-news'),
+            startUpdates: document.getElementById('start-updates'),
+            stopUpdates: document.getElementById('stop-updates'),
+            updateStatus: document.getElementById('update-status'),
+            gameTimer: document.getElementById('game-timer'),
+            startTimer: document.getElementById('start-timer'),
+            pauseTimer: document.getElementById('pause-timer'),
+            resetGameBtn: document.getElementById('reset-game-btn'),
+            adminTeamsTable: document.getElementById('admin-teams-table'),
+            adminStocksTable: document.getElementById('admin-stocks-table')
+        };
+
+        // Utility Functions
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);
+        }
+
+        function getRandomChange(min, max) {
+            return Math.random() * (max - min) + min;
+        }
+
+        function showPage(pageId) {
+            // Hide all pages
+            document.querySelectorAll('[id$="-page"]').forEach(page => {
+                page.classList.add('hidden');
+            });
+            
+            // Show the requested page
+            document.getElementById(pageId).classList.remove('hidden');
+            
+            // Special handling for certain pages
+            if (pageId === 'dashboard-page') {
+                updateDashboard();
+                startPriceUpdates();
+            } else if (pageId === 'admin-page') {
+                updateAdminPanel();
+            }
+        }
+
+        function showAdminLogin() {
+            showPage('admin-login-page');
+        }
+
+        // Authentication
+        elements.teamLoginForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const teamId = document.getElementById('team-id').value;
+            const password = document.getElementById('team-password').value;
+            
+            const team = gameState.teams.find(t => t.id === teamId && t.password === password);
+            if (team) {
+                gameState.currentUser = team;
+                showPage('dashboard-page');
+            } else {
+                alert('Invalid team ID or password');
+            }
+        });
+
+        elements.adminLoginForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const adminId = document.getElementById('admin-id').value;
+            const password = document.getElementById('admin-password').value;
+            
+            if (adminId === gameState.admin.id && password === gameState.admin.password) {
+                gameState.currentUser = gameState.admin;
+                showPage('admin-page');
+            } else {
+                alert('Invalid admin credentials');
+            }
+        });
+
+        // Dashboard Functions
+        function updateDashboard() {
+            if (!gameState.currentUser || gameState.currentUser.id === 'admin') return;
+            
+            // Update team info
+            elements.teamName.textContent = gameState.currentUser.name;
+            elements.teamBalance.textContent = formatCurrency(gameState.currentUser.balance);
+            
+            // Update stocks table
+            elements.stocksTable.innerHTML = '';
+            gameState.stocks.forEach(stock => {
+                const change = stock.history.length > 1 ? 
+                    ((stock.price - stock.history[stock.history.length - 2]) / stock.history[stock.history.length - 2] * 100) : 0;
+                
+                const row = document.createElement('tr');
+                row.className = 'border-b border-gray-700 hover:bg-gray-700 cursor-pointer';
+                row.dataset.symbol = stock.symbol;
+                row.onclick = () => selectStock(stock.symbol);
+                
+                row.innerHTML = `
+                    <td class="py-3">
+                        <div class="font-medium">${stock.name}</div>
+                        <div class="text-xs text-gray-400">${stock.symbol}</div>
+                    </td>
+                    <td class="py-3 font-medium">${formatCurrency(stock.price)}</td>
+                    <td class="py-3 ${change >= 0 ? 'stock-up' : 'stock-down'}">
+                        ${change >= 0 ? '+' : ''}${change.toFixed(2)}%
+                    </td>
+                    <td class="py-3">
+                        <button class="trade-btn bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded text-sm" data-symbol="${stock.symbol}" data-action="buy">
+                            <i class="fas fa-arrow-up mr-1"></i>Buy
+                        </button>
+                    </td>
+                `;
+                
+                elements.stocksTable.appendChild(row);
+            });
+            
+            // Update trade stock dropdown
+            elements.tradeStock.innerHTML = '';
+            gameState.stocks.forEach(stock => {
+                const option = document.createElement('option');
+                option.value = stock.symbol;
+                option.textContent = `${stock.name} (${stock.symbol})`;
+                elements.tradeStock.appendChild(option);
+            });
+            
+            // Update portfolio
+            updatePortfolio();
+            
+            // Update leaderboard
+            updateLeaderboard();
+            
+            // Update last updated time
+            elements.lastUpdated.textContent = new Date().toLocaleTimeString();
+            
+            // Select first stock by default
+            if (gameState.stocks.length > 0 && !gameState.selectedStock) {
+                selectStock(gameState.stocks[0].symbol);
+            }
+        }
+
+        function updatePortfolio() {
+            const portfolio = gameState.currentUser.portfolio;
+            const hasHoldings = Object.keys(portfolio).length > 0;
+            
+            elements.portfolioEmpty.classList.toggle('hidden', hasHoldings);
+            elements.portfolioContent.classList.toggle('hidden', !hasHoldings);
+            
+            if (!hasHoldings) return;
+            
+            elements.portfolioTable.innerHTML = '';
+            let totalValue = 0;
+            
+            Object.entries(portfolio).forEach(([symbol, holding]) => {
+                const stock = gameState.stocks.find(s => s.symbol === symbol);
+                if (!stock) return;
+                
+                const currentValue = stock.price * holding.shares;
+                const profitLoss = currentValue - (holding.avgPrice * holding.shares);
+                const profitLossPercent = ((currentValue / (holding.avgPrice * holding.shares)) - 1) * 100;
+                
+                totalValue += currentValue;
+                
+                const row = document.createElement('tr');
+                row.className = 'border-b border-gray-700';
+                row.innerHTML = `
+                    <td class="py-2">
+                        <div class="font-medium">${stock.name}</div>
+                        <div class="text-xs text-gray-400">${stock.symbol}</div>
+                    </td>
+                    <td class="py-2">${holding.shares}</td>
+                    <td class="py-2">${formatCurrency(holding.avgPrice)}</td>
+                    <td class="py-2">${formatCurrency(currentValue)}</td>
+                    <td class="py-2 ${profitLoss >= 0 ? 'stock-up' : 'stock-down'}">
+                        ${profitLoss >= 0 ? '+' : ''}${formatCurrency(profitLoss)} (${profitLossPercent.toFixed(2)}%)
+                    </td>
+                `;
+                
+                elements.portfolioTable.appendChild(row);
+            });
+            
+            elements.portfolioTotal.textContent = formatCurrency(totalValue);
+        }
+
+        function updateLeaderboard() {
+            const teamsWithValues = gameState.teams.map(team => {
+                const portfolioValue = Object.entries(team.portfolio).reduce((total, [symbol, holding]) => {
+                    const stock = gameState.stocks.find(s => s.symbol === symbol);
+                    return total + (stock ? stock.price * holding.shares : 0);
+                }, 0);
+                
+                return {
+                    ...team,
+                    portfolioValue,
+                    totalValue: team.balance + portfolioValue
+                };
+            }).sort((a, b) => b.totalValue - a.totalValue);
+            
+            elements.leaderboardTable.innerHTML = '';
+            
+            teamsWithValues.forEach((team, index) => {
+                const row = document.createElement('tr');
+                row.className = 'border-b border-gray-700';
+                row.innerHTML = `
+                    <td class="py-2">${index + 1}</td>
+                    <td class="py-2 font-medium">${team.name}</td>
+                    <td class="py-2">${formatCurrency(team.totalValue)}</td>
+                    <td class="py-2 ${index === 0 ? 'text-green-400' : ''}">
+                        ${index === 0 ? '<i class="fas fa-trophy mr-1"></i>' : ''}${(Math.random() * 10).toFixed(2)}%
+                    </td>
+                `;
+                
+                elements.leaderboardTable.appendChild(row);
+            });
+        }
+
+        function selectStock(symbol) {
+            gameState.selectedStock = gameState.stocks.find(s => s.symbol === symbol);
+            
+            // Highlight selected stock in table
+            document.querySelectorAll('#stocks-table tr').forEach(row => {
+                row.classList.toggle('bg-gray-700', row.dataset.symbol === symbol);
+            });
+            
+            // Update trade form
+            elements.tradeStock.value = symbol;
+            
+            // Update chart
+            updateStockChart();
+        }
+
+        function updateStockChart() {
+            if (!gameState.selectedStock) return;
+            
+            const ctx = elements.stockChart.getContext('2d');
+            const stock = gameState.selectedStock;
+            const labels = Array.from({ length: stock.history.length }, (_, i) => i);
+            
+            if (gameState.stockChart) {
+                gameState.stockChart.destroy();
+            }
+            
+            gameState.stockChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: `${stock.name} Price`,
+                        data: stock.history,
+                        borderColor: '#3b82f6',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        borderWidth: 2,
+                        pointRadius: 0,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: false,
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            },
+                            ticks: {
+                                callback: function(value) {
+                                    return formatCurrency(value);
+                                }
+                            }
+                        },
+                        x: {
+                            display: false,
+                            grid: {
+                                display: false
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `${stock.symbol}: ${formatCurrency(context.raw)}`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Trade Functions
+        elements.buyBtn.addEventListener('click', function() {
+            executeTrade('buy');
+        });
+
+        elements.sellBtn.addEventListener('click', function() {
+            executeTrade('sell');
+        });
+
+        function executeTrade(action) {
+            const symbol = elements.tradeStock.value;
+            const quantity = parseInt(elements.tradeQuantity.value);
+            
+            if (isNaN(quantity) || quantity <= 0) {
+                showTradeMessage('Please enter a valid quantity', 'error');
+                return;
+            }
+            
+            const stock = gameState.stocks.find(s => s.symbol === symbol);
+            if (!stock) {
+                showTradeMessage('Stock not found', 'error');
+                return;
+            }
+            
+            const totalCost = stock.price * quantity;
+            
+            if (action === 'buy') {
+                if (gameState.currentUser.balance < totalCost) {
+                    showTradeMessage('Insufficient funds', 'error');
+                    return;
+                }
+                
+                // Update balance
+                gameState.currentUser.balance -= totalCost;
+                
+                // Update portfolio
+                if (!gameState.currentUser.portfolio[symbol]) {
+                    gameState.currentUser.portfolio[symbol] = {
+                        shares: 0,
+                        avgPrice: 0
+                    };
+                }
+                
+                const portfolioItem = gameState.currentUser.portfolio[symbol];
+                const newTotalShares = portfolioItem.shares + quantity;
+                const newAvgPrice = ((portfolioItem.avgPrice * portfolioItem.shares) + (stock.price * quantity)) / newTotalShares;
+                
+                portfolioItem.shares = newTotalShares;
+                portfolioItem.avgPrice = newAvgPrice;
+                
+                showTradeMessage(`Successfully bought ${quantity} shares of ${stock.name} for ${formatCurrency(totalCost)}`, 'success');
+            } else { // sell
+                if (!gameState.currentUser.portfolio[symbol] || gameState.currentUser.portfolio[symbol].shares < quantity) {
+                    showTradeMessage(`You don't have enough shares to sell`, 'error');
+                    return;
+                }
+                
+                // Update balance
+                gameState.currentUser.balance += totalCost;
+                
+                // Update portfolio
+                gameState.currentUser.portfolio[symbol].shares -= quantity;
+                if (gameState.currentUser.portfolio[symbol].shares === 0) {
+                    delete gameState.currentUser.portfolio[symbol];
+                }
+                
+                showTradeMessage(`Successfully sold ${quantity} shares of ${stock.name} for ${formatCurrency(totalCost)}`, 'success');
+            }
+            
+            // Update UI
+            updateDashboard();
+        }
+
+        function showTradeMessage(message, type) {
+            elements.tradeMessage.textContent = message;
+            elements.tradeMessage.className = 'p-3 rounded-lg text-sm';
+            elements.tradeMessage.classList.add(type === 'error' ? 'bg-red-900 text-red-100' : 'bg-green-900 text-green-100');
+            elements.tradeMessage.classList.remove('hidden');
+            
+            setTimeout(() => {
+                elements.tradeMessage.classList.add('hidden');
+            }, 5000);
+        }
+
+        // Stock Price Updates
+        function startPriceUpdates() {
+            if (gameState.priceUpdateInterval) return;
+            
+            gameState.priceUpdateInterval = setInterval(updateStockPrices, 5000);
+            updateStockPrices(); // Initial update
+        }
+
+        function stopPriceUpdates() {
+            clearInterval(gameState.priceUpdateInterval);
+            gameState.priceUpdateInterval = null;
+        }
+
+        function updateStockPrices() {
+            // Random fluctuations
+            gameState.stocks.forEach(stock => {
+                // Base random change
+                let changePercent = getRandomChange(-1, 1);
+                
+                // Apply news impacts
+                const activeNewsForStock = gameState.activeNews.filter(news => news.stock === stock.symbol);
+                activeNewsForStock.forEach(news => {
+                    changePercent += news.impact;
+                });
+                
+                // Calculate new price
+                const newPrice = stock.price * (1 + changePercent / 100);
+                stock.price = Math.max(1, Math.round(newPrice * 100) / 100); // Ensure price doesn't go below 1
+                
+                // Update history
+                stock.history.push(stock.price);
+                if (stock.history.length > 50) {
+                    stock.history.shift();
+                }
+            });
+            
+            // Update dashboard if visible
+            if (!elements.dashboardPage.classList.contains('hidden')) {
+                updateDashboard();
+            }
+            
+            // Update admin panel if visible
+            if (!elements.adminPage.classList.contains('hidden')) {
+                updateAdminPanel();
+            }
+            
+            // Random news ticker updates
+            if (Math.random() < 0.3) {
+                const randomStock = gameState.stocks[Math.floor(Math.random() * gameState.stocks.length)];
+                const change = randomStock.history.length > 1 ? 
+                    ((randomStock.price - randomStock.history[randomStock.history.length - 2]) / randomStock.history[randomStock.history.length - 2] * 100) : 0;
+                
+                const phrases = [
+                    `${randomStock.name} ${change >= 0 ? 'gains' : 'drops'} ${Math.abs(change).toFixed(1)}% on ${change >= 0 ? 'positive' : 'negative'} market sentiment`,
+                    `Analysts ${change >= 0 ? 'raise' : 'lower'} targets for ${randomStock.name}`,
+                    `${randomStock.category} sector ${change >= 0 ? 'outperforms' : 'underperforms'} market today`,
+                    `${randomStock.name} shares ${change >= 0 ? 'surge' : 'fall'} amid ${change >= 0 ? 'optimism' : 'concerns'}`,
+                    `Trading volume spikes for ${randomStock.name} as price moves ${change >= 0 ? 'higher' : 'lower'}`
+                ];
+                
+                elements.newsContent.textContent = phrases[Math.floor(Math.random() * phrases.length)];
+            }
+        }
+
+        // Admin Panel Functions
+        function updateAdminPanel() {
+            // Update news stock dropdown
+            elements.newsStock.innerHTML = '';
+            gameState.stocks.forEach(stock => {
+                const option = document.createElement('option');
+                option.value = stock.symbol;
+                option.textContent = `${stock.name} (${stock.symbol})`;
+                elements.newsStock.appendChild(option);
+            });
+            
+            // Update pending news
+            elements.pendingNews.innerHTML = '';
+            gameState.pendingNews.forEach((news, index) => {
+                const stock = gameState.stocks.find(s => s.symbol === news.stock);
+                const newsItem = document.createElement('div');
+                newsItem.className = 'bg-gray-700 p-3 rounded-lg flex justify-between items-center';
+                newsItem.innerHTML = `
+                    <div>
+                        <div class="font-medium">${news.headline}</div>
+                        <div class="text-xs text-gray-400">
+                            Affects: ${stock ? stock.name : news.stock} (${news.impact > 0 ? '+' : ''}${news.impact}%)
+                        </div>
+                    </div>
+                    <div class="flex space-x-2">
+                        <button class="trigger-news-btn bg-green-600 hover:bg-green-700 px-3 py-1 rounded text-sm" data-index="${index}">
+                            <i class="fas fa-bullhorn mr-1"></i>Trigger
+                        </button>
+                        <button class="delete-news-btn bg-red-600 hover:bg-red-700 px-3 py-1 rounded text-sm" data-index="${index}">
+                            <i class="fas fa-trash mr-1"></i>Delete
+                        </button>
+                    </div>
+                `;
+                
+                elements.pendingNews.appendChild(newsItem);
+            });
+            
+            // Add event listeners to new buttons
+            document.querySelectorAll('.trigger-news-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const index = parseInt(this.dataset.index);
+                    triggerNewsEvent(index);
+                });
+            });
+            
+            document.querySelectorAll('.delete-news-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const index = parseInt(this.dataset.index);
+                    gameState.pendingNews.splice(index, 1);
+                    updateAdminPanel();
+                });
+            });
+            
+            // Update teams table
+            elements.adminTeamsTable.innerHTML = '';
+            gameState.teams.forEach(team => {
+                const portfolioValue = Object.entries(team.portfolio).reduce((total, [symbol, holding]) => {
+                    const stock = gameState.stocks.find(s => s.symbol === symbol);
+                    return total + (stock ? stock.price * holding.shares : 0);
+                }, 0);
+                
+                const row = document.createElement('tr');
+                row.className = 'border-b border-gray-700';
+                row.innerHTML = `
+                    <td class="py-2">${team.name}</td>
+                    <td class="py-2">${formatCurrency(team.balance)}</td>
+                    <td class="py-2">${formatCurrency(portfolioValue)}</td>
+                    <td class="py-2 font-medium">${formatCurrency(team.balance + portfolioValue)}</td>
+                `;
+                
+                elements.adminTeamsTable.appendChild(row);
+            });
+            
+            // Update stocks table
+            elements.adminStocksTable.innerHTML = '';
+            gameState.stocks.forEach(stock => {
+                const change = stock.history.length > 1 ? 
+                    ((stock.price - stock.history[stock.history.length - 2]) / stock.history[stock.history.length - 2] * 100) : 0;
+                
+                const row = document.createElement('tr');
+                row.className = 'border-b border-gray-700';
+                row.innerHTML = `
+                    <td class="py-2">
+                        <div class="font-medium">${stock.name}</div>
+                        <div class="text-xs text-gray-400">${stock.symbol}</div>
+                    </td>
+                    <td class="py-2">${formatCurrency(stock.price)}</td>
+                    <td class="py-2 ${change >= 0 ? 'stock-up' : 'stock-down'}">
+                        ${change >= 0 ? '+' : ''}${change.toFixed(2)}%
+                    </td>
+                    <td class="py-2">${formatCurrency(stock.price * 1000000)}</td>
+                    <td class="py-2">
+                        <button class="edit-stock-btn bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded text-sm" data-symbol="${stock.symbol}">
+                            <i class="fas fa-edit mr-1"></i>Edit
+                        </button>
+                    </td>
+                `;
+                
+                elements.adminStocksTable.appendChild(row);
+            });
+            
+            // Update timer display
+            const minutes = Math.floor(gameState.gameTimeLeft / 60);
+            const seconds = gameState.gameTimeLeft % 60;
+            elements.gameTimer.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            
+            // Update status indicators
+            elements.updateStatus.textContent = gameState.priceUpdateInterval ? 'Running' : 'Stopped';
+            elements.updateStatus.className = gameState.priceUpdateInterval ? 'text-sm text-green-400' : 'text-sm text-red-400';
+        }
+
+        // News Management
+        elements.newsForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const headline = elements.newsHeadline.value;
+            const stock = elements.newsStock.value;
+            const impact = parseFloat(elements.newsImpact.value);
+            
+            if (!headline || !stock || isNaN(impact)) {
+                alert('Please fill all fields with valid values');
+                return;
+            }
+            
+            gameState.pendingNews.push({
+                headline,
+                stock,
+                impact,
+                timestamp: new Date()
+            });
+            
+            elements.newsHeadline.value = '';
+            elements.newsImpact.value = '';
+            
+            updateAdminPanel();
+        });
+
+        function triggerNewsEvent(index) {
+            if (index < 0 || index >= gameState.pendingNews.length) return;
+            
+            const news = gameState.pendingNews[index];
+            gameState.activeNews.push(news);
+            gameState.newsEvents.push(news);
+            gameState.pendingNews.splice(index, 1);
+            
+            // Update news ticker
+            const stock = gameState.stocks.find(s => s.symbol === news.stock);
+            elements.newsContent.textContent = `BREAKING: ${news.headline} - ${stock ? stock.name : news.stock} ${news.impact > 0 ? 'up' : 'down'} ${Math.abs(news.impact)}%`;
+            
+            // Remove news effect after 30 seconds
+            setTimeout(() => {
+                const newsIndex = gameState.activeNews.indexOf(news);
+                if (newsIndex !== -1) {
+                    gameState.activeNews.splice(newsIndex, 1);
+                }
+            }, 30000);
+            
+            updateAdminPanel();
+        }
+
+        // Game Controls
+        elements.startUpdates.addEventListener('click', function() {
+            startPriceUpdates();
+            updateAdminPanel();
+        });
+
+        elements.stopUpdates.addEventListener('click', function() {
+            stopPriceUpdates();
+            updateAdminPanel();
+        });
+
+        elements.startTimer.addEventListener('click', function() {
+            if (gameState.gameTimerInterval) return;
+            
+            gameState.gameTimerInterval = setInterval(() => {
+                gameState.gameTimeLeft--;
+                
+                const minutes = Math.floor(gameState.gameTimeLeft / 60);
+                const seconds = gameState.gameTimeLeft % 60;
+                elements.gameTimer.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                
+                if (gameState.gameTimeLeft <= 0) {
+                    clearInterval(gameState.gameTimerInterval);
+                    gameState.gameTimerInterval = null;
+                    alert('Game time has ended!');
+                }
+            }, 1000);
+        });
+
+        elements.pauseTimer.addEventListener('click', function() {
+            clearInterval(gameState.gameTimerInterval);
+            gameState.gameTimerInterval = null;
+        });
+
+        elements.resetGameBtn.addEventListener('click', function() {
+            if (confirm('Are you sure you want to reset the game? All teams will lose their portfolios and balances will be reset.')) {
+                // Reset teams
+                gameState.teams.forEach(team => {
+                    team.balance = 100000;
+                    team.portfolio = {};
+                });
+                
+                // Reset stocks to initial prices
+                const initialPrices = [
+                    9250, 7600, 6850, 8400, 5300, 3200, 6450, 5800, 4950, 6200, 
+                    4700, 7050, 3400, 2950, 3150, 4200, 7800, 3600, 9100, 8650, 
+                    6900, 8100, 9700, 9850
+                ];
+                
+                gameState.stocks.forEach((stock, index) => {
+                    stock.price = initialPrices[index];
+                    stock.history = Array(20).fill(initialPrices[index]);
+                });
+                
+                // Clear news
+                gameState.newsEvents = [];
+                gameState.pendingNews = [];
+                gameState.activeNews = [];
+                
+                // Reset timer
+                gameState.gameTimeLeft = 3600;
+                clearInterval(gameState.gameTimerInterval);
+                gameState.gameTimerInterval = null;
+                
+                // Update UI
+                updateAdminPanel();
+                if (!elements.dashboardPage.classList.contains('hidden')) {
+                    updateDashboard();
+                }
+                
+                alert('Game has been reset!');
+            }
+        });
+
+        // Logout function
+        function logout() {
+            gameState.currentUser = null;
+            stopPriceUpdates();
+            showPage('login-page');
+        }
+
+        // Initialize
+        showPage('landing-page');
+        
+        // Event delegation for dynamically created trade buttons
+        document.addEventListener('click', function(e) {
+            if (e.target.classList.contains('trade-btn') || e.target.parentElement.classList.contains('trade-btn')) {
+                const btn = e.target.classList.contains('trade-btn') ? e.target : e.target.parentElement;
+                const symbol = btn.dataset.symbol;
+                const action = btn.dataset.action;
+                
+                elements.tradeStock.value = symbol;
+                selectStock(symbol);
+                
+                if (action === 'buy') {
+                    elements.buyBtn.click();
+                } else {
+                    elements.sellBtn.click();
+                }
+            }
+        });
+    </script>
+</body>
+</html>
